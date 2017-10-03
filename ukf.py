@@ -42,15 +42,15 @@ class UKF:
 
         self.chi_a = chi_a
 
-    def update(self, z, lmidx):
-        i = lmidx
+    def update(self, z, lm_idx):
+        i = lm_idx
 
         lma = np.array([self.lm[i]]).T
         Zbar = np.empty((2,2*7 + 1))
         for j in range(2*7 + 1):
-            q_sqrt = np.linalg.norm(self.chi_a[0:2,:] - lma)
+            q_sqrt = np.linalg.norm(self.chi_a[0:2,j:j+1] - lma)
             Zbar[:,j:j+1] = np.array([[q_sqrt],
-                         [np.arctan2(lma[1,0] - self.x[1,0], lma[0,0] - self.x[0,0]) - self.x[2,0]]]) + self.chi_a[5:7,j:j+1]
+                         [np.arctan2(lma[1,0] - self.chi_a[1,j], lma[0,0] - self.chi_a[0,j]) - self.chi_a[2,j]]]) + self.chi_a[5:7,j:j+1]
         zhat = np.atleast_2d(np.sum(self.w_m*Zbar,axis=1)).T
 
         S = (self.w_c*(Zbar - zhat)).dot((Zbar - zhat).T)
