@@ -1,6 +1,6 @@
 
 from rover import Rover
-from ekf import EKF
+from ukf import UKF
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -9,7 +9,7 @@ num_st = 3
 
 if __name__ == '__main__':
     rov = Rover()
-    ekf = EKF()
+    ukf = UKF()
     truth = np.array([]).reshape(num_st,0)
     estimate = np.array([]).reshape(num_st,0)
     variance = np.array([]).reshape(num_st,0)
@@ -40,10 +40,10 @@ if __name__ == '__main__':
         plt.scatter([6,-7,6],[4,8,-4])
         # plt.pause(0.00001)
 
-        ekf.propodate(u, ts)
-        gain =  np.concatenate((gain, ekf.update(rov.get_mesurement())), axis=1)
-        estimate = np.concatenate((estimate, ekf.est_state()), axis=1)
-        variance = np.concatenate((variance, ekf.vars()), axis=1)
+        ukf.propodate(u, ts)
+        gain =  np.concatenate((gain, ukf.update(rov.get_mesurement(), int(t*10)%3)), axis=1)
+        estimate = np.concatenate((estimate, ukf.est_state()), axis=1)
+        variance = np.concatenate((variance, ukf.vars()), axis=1)
 
     plt.ioff()
 
