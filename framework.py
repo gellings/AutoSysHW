@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 
 ts = 0.1
 num_st = 3
+plot_movement = False
 
 if __name__ == '__main__':
     rov = Rover()
@@ -27,18 +28,19 @@ if __name__ == '__main__':
         rov.propogate_dynamics(u, ts)
         truth = np.concatenate((truth, rov.true_state()),axis=1)
 
-        plt.clf()
-        plt.axis([-10, 10, -10, 10])
-        [[x],[y],[t]] = rov.true_state()
-        plt.scatter(x, y)
-        plt.scatter(x + 0.5*np.cos(t), y + 0.5*np.sin(t), color='r')
-        mes = rov.get_mesurement()
-        for i in range(3):
-            r = mes[2*i,0]
-            b = mes[2*i + 1,0]
-            plt.scatter(x + r*np.cos(t+b), y + r*np.sin(t+b), color='g')
-        plt.scatter([6,-7,6],[4,8,-4])
-        # plt.pause(0.00001)
+	if plot_movement:
+		plt.clf()
+		plt.axis([-10, 10, -10, 10])
+		[[x],[y],[t]] = rov.true_state()
+		plt.scatter(x, y)
+		plt.scatter(x + 0.5*np.cos(t), y + 0.5*np.sin(t), color='r')
+		mes = rov.get_mesurement()
+		for i in range(3):
+		    r = mes[2*i,0]
+		    b = mes[2*i + 1,0]
+		    plt.scatter(x + r*np.cos(t+b), y + r*np.sin(t+b), color='g')
+		plt.scatter([6,-7,6],[4,8,-4])
+		plt.pause(0.00001)
 
         ukf.propodate(u, ts)
         gain =  np.concatenate((gain, ukf.update(rov.get_mesurement(), int(t*10)%3)), axis=1)
