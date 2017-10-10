@@ -1,16 +1,16 @@
 
 from rover import Rover
-from ukf import UKF
+from pf import PF
 import numpy as np
 import matplotlib.pyplot as plt
 
 ts = 0.1
 num_st = 3
-plot_movement = False
+plot_movement = True
 
 if __name__ == '__main__':
     rov = Rover()
-    ukf = UKF()
+    pf = PF()
     truth = np.array([]).reshape(num_st,0)
     estimate = np.array([]).reshape(num_st,0)
     variance = np.array([]).reshape(num_st,0)
@@ -28,24 +28,26 @@ if __name__ == '__main__':
         rov.propogate_dynamics(u, ts)
         truth = np.concatenate((truth, rov.true_state()),axis=1)
 
-	if plot_movement:
-		plt.clf()
-		plt.axis([-10, 10, -10, 10])
-		[[x],[y],[t]] = rov.true_state()
-		plt.scatter(x, y)
-		plt.scatter(x + 0.5*np.cos(t), y + 0.5*np.sin(t), color='r')
-		mes = rov.get_mesurement()
-		for i in range(3):
-		    r = mes[2*i,0]
-		    b = mes[2*i + 1,0]
-		    plt.scatter(x + r*np.cos(t+b), y + r*np.sin(t+b), color='g')
-		plt.scatter([6,-7,6],[4,8,-4])
-		plt.pause(0.00001)
+        if plot_movement:
+            plt.clf()
+            plt.axis([-10, 10, -10, 10])
+            [[x],[y],[t]] = rov.true_state()
+            plt.scatter(x, y)
+            plt.scatter(x + 0.5*np.cos(t), y + 0.5*np.sin(t), color='r')
+            mes = rov.get_mesurement()
+            for i in range(3):
+                r = mes[2*i,0]
+                b = mes[2*i + 1,0]
+                plt.scatter(x + r*np.cos(t+b), y + r*np.sin(t+b), color='g')
+            chi = pf.get_chi()
+            plt.scatter(chi[:,0],chi[:,1], color='m')
+            plt.scatter([6,-7,6],[4,8,-4])
+            plt.pause(0.00001)
 
-        ukf.propodate(u, ts)
-        gain =  np.concatenate((gain, ukf.update(rov.get_mesurement(), int(t*10)%3)), axis=1)
-        estimate = np.concatenate((estimate, ukf.est_state()), axis=1)
-        variance = np.concatenate((variance, ukf.vars()), axis=1)
+        pf.propodate(u, ts)
+        pf.update(rov.get_mesurement())
+        estimate = np.concatenate((estimate, pf.est_state()), axis=1)
+        variance = np.concatenate((variance, pf.vars()), axis=1)
 
     plt.ioff()
 
@@ -80,32 +82,32 @@ if __name__ == '__main__':
     # plt.xlabel("time")
     plt.ylabel("x")
     plt.subplot(312)
-    plt.plot(time, np.abs(truth[1,:] - estimate[1,:]), label='error')
+    plt.plot(time, truth[1,:] - estimate[1,:], label='error')
     plt.plot(time, 2*variance[1,:], label='std div (2sig)')
     plt.plot(time, -2*variance[1,:], label='std div (2sig)')
     # plt.legend()
     # plt.xlabel("time")
     plt.ylabel("y")
     plt.subplot(313)
-    plt.plot(time, np.abs(truth[2,:] - estimate[2,:]), label='error')
+    plt.plot(time, truth[2,:] - estimate[2,:], label='error')
     plt.plot(time, 2*variance[2,:], label='std div (2sig)')
     plt.plot(time, -2*variance[2,:], label='std div (2sig)')
     # plt.legend()
     plt.xlabel("Time")
     plt.ylabel("theta (rad)")
 
-    plt.figure(3)
-    plt.subplot(311)
-    plt.title("Kalman Gain")
-    plt.plot(time, gain[0,:])
-    plt.ylabel("x gain")
-    plt.subplot(312)
-    plt.plot(time, gain[1,:])
-    plt.ylabel("y gain")
-    plt.subplot(313)
-    plt.plot(time, gain[2,:])
-    plt.xlabel("Time")
-    plt.ylabel("theta gain")
+    # plt.figure(3)
+    # plt.subplot(311)
+    # plt.title("Kalman Gain")
+    # plt.plot(time, gain[0,:])
+    # plt.ylabel("x gain")
+    # plt.subplot(312)
+    # plt.plot(time, gain[1,:])
+    # plt.ylabel("y gain")
+    # plt.subplot(313)
+    # plt.plot(time, gain[2,:])
+    # plt.xlabel("Time")
+    # plt.ylabel("theta gain")
 
     plt.show()
 
