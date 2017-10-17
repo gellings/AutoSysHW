@@ -1,0 +1,25 @@
+\documentclass{article}
+\usepackage[backend=bibtex]{biblatex}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath}
+\usepackage{amssymb}
+%\usepackage[colorinlistoftodos]{todonotes}
+
+\usepackage[table,xcdraw,usenames,dvipsnames]{xcolor}
+\newcommand{\todo}[1]{{\color{NavyBlue}[TODO: #1]}}
+
+% document information
+\title{Autonomous Systems Class Project Proposal}
+\author{Dan Koch and Gary Ellingson}
+\date{\today}
+
+% remove the numbers
+\setcounter{secnumdepth}{0}
+
+\begin{document}
+\maketitle
+
+The goal of our project is to learn the basic theory of Markov Decision Processes (either observable or partially observable) and apply it to a reasonably scoped problem.  We've had limited exposure to POMDPs and are interested in learning a new interesting topic.  Because of our limitations in knowledge and experience with the subject, we have had difficulty identifying the problem to solve.  One idea that we would like to explore is so try to pose a multirotor obstacle avoidance, similar to James' SEPA, as a MDP.  Simplifying assumptions could be pure 2d motion with holonomic constraints. We could also add uncertainties to the estimation and control to make the problem partially observable. Major milestones include, first learning the basic theory (October 31), second decide on the exact problem and how to pose it as a MDP (November 15), solve the problem in a simplified Matlab/Python simulation (November 31), and finally use the Gazebo simulator to demonstrate the solution (December 15). Required recourses will be purely software, including Matlab or Python and Gazebo.
+
+
+\end{document}
