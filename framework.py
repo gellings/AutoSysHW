@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 ts = 0.1
 num_st = 3
-plot_movement = True
+plot_movement = False
 
 if __name__ == '__main__':
     rov = Rover()

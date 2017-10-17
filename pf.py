@@ -8,6 +8,8 @@ class PF:
         self.alpha = alpha
         self.lm = lm
         self.R = np.diag([sigR,sigB,sigR,sigB,sigR,sigB])
+        self.sigR = sigR
+        self.sigB = sigB
         self.x = np.zeros((3,1))
 
     def propodate(self, u, dt):
@@ -29,12 +31,14 @@ class PF:
         for m in range(self.M):
             x = self.chi[m:m+1,:].T
             zhat = np.empty((0,1))
+            w = 1
             for i in range(3):
                 lma = np.array([self.lm[i]]).T
                 q_sqrt = np.linalg.norm(x[0:2,:] - lma)
                 zhatl = np.array([[q_sqrt],
                                  [np.arctan2(lma[1,0] - x[1,0], lma[0,0] - x[0,0]) - x[2,0]]])
                 zhat = np.concatenate((zhat,zhatl),axis=0)
+                # w *= 1/np.sqrt(2*np.pi*self.sigR**2)*np.exp(-((z[2*i,0] - zhatl[0,0])**2)/2/(self.sigR**2))
             self.w[m,0] = np.linalg.det(2*np.pi*self.R)**(-0.5)*np.exp(-(z - zhat).T.dot(np.linalg.inv(self.R)).dot(z - zhat)/2)[0,0]
             weight_total += self.w[m,0]
 
