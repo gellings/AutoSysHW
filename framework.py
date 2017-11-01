@@ -1,57 +1,104 @@
 
 from rover import Rover
-from pf import PF
+from ekfslam import EKFSLAM
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.patches import Ellipse
 
 ts = 0.1
 num_st = 3
-plot_movement = False
+plot_movement = True#False#
+x0 = np.array([[-5], [-3], [np.pi/2]])
+
+num_lm = 50
+lmloc = 20*np.random.rand(2*num_lm) - 10
+# lmloc = np.random.randint(-10,10, size=2*num_lm)
+landmarks = zip(lmloc[0::2],lmloc[1::2])
 
 if __name__ == '__main__':
-    rov = Rover()
-    pf = PF()
+    rov = Rover(x0=x0, lm=landmarks)
+    ekfslam = EKFSLAM(num_lm=num_lm)
     truth = np.array([]).reshape(num_st,0)
     estimate = np.array([]).reshape(num_st,0)
     variance = np.array([]).reshape(num_st,0)
     gain = np.array([]).reshape(num_st,0)
-    time = np.arange(0, 20, ts)
+    time = np.arange(0, 30, ts)
 
     plt.figure(0)
-    plt.axis([-10, 10, -10, 10])
-    plt.scatter([6,-7,6],[4,8,-4])
     plt.ion()
 
+    i = 0
     for t in time:
         u = np.array([[1 + 0.5*np.cos(2*np.pi*0.2*t)], [-0.2 + 2*np.cos(2*np.pi*0.6*t)]])
+
+        if plot_movement and i%10 == 0:
+            plt.figure(0)
+            plt.clf()
+            plt.axis([-10, 10, -10, 10])
+            [[x],[y],[t]] = rov.true_state()
+            plt.scatter(x, y) # true rover possition
+            plt.scatter(x + 0.5*np.cos(t), y + 0.5*np.sin(t), color='r') # true rover heading
+            plt.scatter(lmloc[0::2],lmloc[1::2]) # true landmark locations
+            mes,ids = rov.get_mesurement()
+            r = mes[0::2,0]
+            b = mes[1::2,0]
+            plt.scatter(x + r*np.cos(t+b), y + r*np.sin(t+b), color='g') # rover measurements in true robot frame
+            st,na = ekfslam.est_state()
+            st = x0 + np.array([[np.cos(x0[2,0]),-np.sin(x0[2,0]),0],[np.sin(x0[2,0]),np.cos(x0[2,0]),0], [0,0,1]]).dot(st)
+            plt.scatter(st[0,0],st[1,0], color='m') # estimated robot state rotated into world frame
+            plt.scatter(st[0,0] + 0.5*np.cos(st[2,0]), st[1,0] + 0.5*np.sin(st[2,0]), color='m') # estimtated rover heading
+            plt.scatter(st[0,0] + r*np.cos(st[2,0]+b), st[1,0] + r*np.sin(st[2,0]+b), color='y') # rover measurements in estimated robot frame
+
+            plt.figure(1)
+            plt.clf()
+            a = plt.subplot(111, aspect='equal')
+            e1, e2, ang = ekfslam.state_elps()
+            e = Ellipse((st[0,0], st[1,0]), e1, e2, (ang + x0[2,0])*180/np.pi)
+            a.add_artist(e)
+            e.set_alpha(0.5)
+            e.set_facecolor([1.,0.,0.])
+
+            e = Ellipse((x,y),0.15,0.15,0)
+            a.add_artist(e)
+            e.set_facecolor([1.,0.,0.])
+
+            loc, other = ekfslam.lm_elps()
+            for i in range(loc.shape[0]):
+                p = loc[i:i+1,:].T
+                p = x0[0:2,:] + np.array([[np.cos(x0[2,0]),-np.sin(x0[2,0])],[np.sin(x0[2,0]),np.cos(x0[2,0])]]).dot(p)
+                e = Ellipse((p[0,0] , p[1,0]), other[i,0], other[i,1], (other[i,2] + x0[2,0])*180/np.pi)
+                a.add_artist(e)
+                e.set_alpha(0.3)
+
+            for lm in landmarks:
+                e = Ellipse(lm, 0.15, 0.15, 0)
+                a.add_artist(e)
+                e.set_facecolor([0.,1.0,0.])
+
+            plt.xlim(-10, 10)
+            plt.ylim(-10, 10)
+
+            plt.figure(2)
+            plt.imshow(1 - np.clip(ekfslam.P.T.copy(),0,1), cmap='gray')
+            plt.pause(0.00001)
+            # plt.pause(5)
+
+        i += 1
 
         rov.propogate_dynamics(u, ts)
         truth = np.concatenate((truth, rov.true_state()),axis=1)
 
-        if plot_movement:
-            plt.clf()
-            plt.axis([-10, 10, -10, 10])
-            [[x],[y],[t]] = rov.true_state()
-            plt.scatter(x, y)
-            plt.scatter(x + 0.5*np.cos(t), y + 0.5*np.sin(t), color='r')
-            mes = rov.get_mesurement()
-            for i in range(3):
-                r = mes[2*i,0]
-                b = mes[2*i + 1,0]
-                plt.scatter(x + r*np.cos(t+b), y + r*np.sin(t+b), color='g')
-            chi = pf.get_chi()
-            plt.scatter(chi[:,0],chi[:,1], color='m')
-            plt.scatter([6,-7,6],[4,8,-4])
-            plt.pause(0.00001)
-
-        pf.propodate(u, ts)
-        pf.update(rov.get_mesurement())
-        estimate = np.concatenate((estimate, pf.est_state()), axis=1)
-        variance = np.concatenate((variance, pf.vars()), axis=1)
+        ekfslam.propodate(u, ts)
+        mes,ids = rov.get_mesurement()
+        ekfslam.update(mes,ids)
+        st,na = ekfslam.est_state()
+        st = x0 + np.array([[np.cos(x0[2,0]),-np.sin(x0[2,0]),0],[np.sin(x0[2,0]),np.cos(x0[2,0]),0], [0,0,1]]).dot(st)
+        estimate = np.concatenate((estimate, st), axis=1)
+        variance = np.concatenate((variance, ekfslam.vars()), axis=1)
 
     plt.ioff()
 
-    plt.figure(1)
+    plt.figure(3)
     plt.subplot(311)
     plt.title("Truth vs Estimate")
     plt.plot(time, truth[0,:], label='truth')
@@ -72,7 +119,7 @@ if __name__ == '__main__':
     plt.xlabel("Time")
     plt.ylabel("theta (rad)")
 
-    plt.figure(2)
+    plt.figure(4)
     plt.subplot(311)
     plt.title("Truth vs Estimate")
     plt.plot(time, truth[0,:] - estimate[0,:], label='error')
