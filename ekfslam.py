@@ -9,6 +9,7 @@ class EKFSLAM:
         self.alpha = alpha
         self.R = np.diag([sigR,sigB])
         self.lmIDs = np.empty((0,1), dtype=np.int)
+        self.old = 0
 
     def propodate(self, u, dt):
         v = u[0,0]
@@ -20,7 +21,7 @@ class EKFSLAM:
                                                           [0,0,v/w*(-np.sin(theta) + np.sin(theta + w*dt))],
                                                           [0,0,0]])                                         ).dot(F)
         G = np.array([[(-np.sin(theta) + np.sin(theta + w*dt))/w, v/w*((np.sin(theta) - np.sin(theta + w*dt))/w + np.cos(theta + w*dt)*dt)],
-                      [(np.cos(theta) - np.cos(theta + w*dt))/w, v/w*((-np.cos(theta) - np.cos(theta + w*dt))/w + np.sin(theta + w*dt)*dt)],
+                      [(np.cos(theta) - np.cos(theta + w*dt))/w, v/w*((-np.cos(theta) + np.cos(theta + w*dt))/w + np.sin(theta + w*dt)*dt)],
                       [0,dt]])
         Qu = np.diag([(self.alpha[0]*np.abs(v) + self.alpha[1]*np.abs(w))**2, (self.alpha[2]*np.abs(v) + self.alpha[3]*np.abs(w))**2])
         self.x[0:3,:] += np.array([[v/w*(-np.sin(theta) + np.sin(theta + w*dt))],
