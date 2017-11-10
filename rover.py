@@ -1,7 +1,7 @@
 import numpy as np
 
 class Rover:
-    def __init__(self, x0, alpha=[0.1, 0.01, 0.01, 0.1], lm=[(6,4),(-7,8),(6,-4)], sigR=0.1, sigB=0.05, maxrange=10, view=45):
+    def __init__(self, x0, alpha=[0.1, 0.01, 0.01, 0.1], lm=[(6,4),(-7,8),(6,-4)], sigR=0.1, sigB=0.05, maxrange=10, view=90):
         self.x = x0[0,0]
         self.y = x0[1,0]
         self.theta = x0[2,0]
@@ -32,7 +32,8 @@ class Rover:
                 brng -= 2*np.pi
             if brng < -np.pi:
                 brng += 2*np.pi
-            if rng < self.maxrange and brng < self.view/2 and brng > -self.view/2:
+            assert brng > -np.pi and brng < np.pi
+            if rng > 0 and rng < self.maxrange and brng < self.view/2 and brng > -self.view/2:
                 IDs = np.concatenate((IDs, np.array([[i]])))
                 mes = np.concatenate((mes, np.array([[rng],[brng]])))
 
