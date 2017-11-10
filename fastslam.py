@@ -2,7 +2,7 @@ import numpy as np
 from copy import deepcopy
 
 class FASTSLAM:
-    def __init__(self, num_lm=3, alpha=[0.1, 0.01, 0.01, 0.1], sigR=0.1, sigB=0.05, particles=25):
+    def __init__(self, num_lm=3, alpha=[0.1, 0.01, 0.01, 0.1], sigR=0.1, sigB=0.05, particles=9):
         self.Y = np.empty((particles, 1), dtype=object)
         for i in range(particles):
             self.Y[i,0] = PARTICLE(num_lm=num_lm, alpha=alpha, sigR=sigR, sigB=sigB)
@@ -14,17 +14,14 @@ class FASTSLAM:
         [p[0].propogate(u, dt) for p in self.Y]
 
     def update(self, z, lmIDs):
-        # w = np.zeros((self.M,1))
         w = np.ones((self.M,1))
         for i in range(lmIDs.shape[0]):
             ID = lmIDs[i:i+1,:]
             z1 = z[2*i:2*i+2,:]
             w *= np.array([[p[0].update(z1, ID) for p in self.Y]]).T
-            # w = np.maximum(w,np.array([[p[0].update(z1, ID) for p in self.Y]]).T)
             w *= 1./np.sum(w)
         self.w = w
         self.bastPidx = np.argmax(self.w)
-        # self.resample()
 
     def resample(self):
         scale = np.sum(self.w)
