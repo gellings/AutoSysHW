@@ -2,7 +2,7 @@ import numpy as np
 from copy import deepcopy
 
 class FASTSLAM:
-    def __init__(self, num_lm=3, alpha=[0.1, 0.01, 0.01, 0.1], sigR=0.1, sigB=0.05, particles=9):
+    def __init__(self, num_lm=3, alpha=[0.1, 0.01, 0.01, 0.1], sigR=0.1, sigB=0.05, particles=25):
         self.Y = np.empty((particles, 1), dtype=object)
         for i in range(particles):
             self.Y[i,0] = PARTICLE(num_lm=num_lm, alpha=alpha, sigR=sigR, sigB=sigB)
@@ -52,7 +52,7 @@ class PARTICLE:
         self.num_lm = num_lm
         self.x = np.zeros((3,1))
         self.alpha = alpha
-        self.R = np.diag([sigR*10,sigB*10])
+        self.R = np.diag([sigR,sigB])
         self.lmX = np.empty((0,1))
         self.lmP = np.empty((0,2))
         self.lmIDs = np.empty((0,1), dtype=np.int)
@@ -112,7 +112,7 @@ class PARTICLE:
             self.lmX[2*j:2*j+2,:] += K.dot(residual)
             self.lmP[2*j:2*j+2,:] = (np.eye(2) - K.dot(H)).dot(P)
 
-            return np.linalg.det(2*np.pi*S)**(-0.5)*np.exp(-(z - zhat).T.dot(Sinv).dot(z - zhat)/2)[0,0]
+            return np.linalg.det(2*np.pi*S)**(-0.5)*np.exp(-(residual).T.dot(Sinv).dot(residual)/2)[0,0]
 
     def est_state(self):
         return self.x.copy(), self.lmX.copy()
