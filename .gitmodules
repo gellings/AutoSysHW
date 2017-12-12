@@ -1,3 +1,6 @@
 [submodule "595r"]
 	path = 595r
 	url = https://github.com/el3ment/595r.git
+[submodule "glider_mdp"]
+	path = glider_mdp
+	url = ssh://git@magiccvs.byu.edu:290/dpkoch/glider_mdp.git
