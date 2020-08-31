@@ -17,7 +17,7 @@ class KF:
 
     def propodate(self, u):
         self.x = self.A.dot(self.x) + self.B.dot(u)
-        self.P = self.P.dot(self.A).dot(self.A.T) + self.Q
+        self.P = self.A.dot(self.P).dot(self.A.T) + self.Q
 
     def update(self, z):
         inv = np.linalg.inv(self.C.dot(self.P).dot(self.C.T) + self.R)

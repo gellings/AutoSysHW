@@ -41,3 +41,55 @@ class OGM:
             return self.l_free
         print "warn"
         return self.l_0
+
+    def update_map2(self, x, z):
+        for i in range(z.shape[1]):
+            self.add_range_measurement(x, z[0,i], self.thk[0,i])
+        self.map = np.clip(self.map,0,1)
+
+    def add_range_measurement(self, x, r, b):
+        if np.isnan(r):
+            r = self.z_max
+        ray_absolute_bearing = x[2,0] + b
+        start_point = x[0:2,:]
+        end_point = min([r, self.z_max])*np.array([[np.cos(ray_absolute_bearing)], 
+                                                      [np.sin(ray_absolute_bearing)]])
+
+        ie = np.rint(start_point[0,0] + end_point[0,0]).astype(int)
+        je = np.rint(start_point[1,0] + end_point[1,0]).astype(int)
+
+        # first add the end point
+        if ie < 100 and ie >= 0 and je < 100 and je >= 0: 
+            self.map[ie,je] += self.l_occ - self.l_0
+
+        ist = np.rint(start_point[0,0]).astype(int)
+        jst = np.rint(start_point[1,0]).astype(int)
+        
+        # now the free space
+        self.freeCells(ist, jst, ie, je)
+
+    def freeCells(self, x0, y0, x1, y1):
+        dx = abs(x1 - x0)
+        if x0 < x1:
+            sx = 1
+        else:
+            sx = -1
+
+        dy = -abs(y1 - y0)
+        if y0 < y1:
+            sy = 1
+        else:
+            sy = -1
+        err = dx + dy
+
+        while True:
+            if (x0 == x1 and y0 == y1) or x0 >= 100 or x0 < 0 or y0 >= 100 or y0 < 0:
+                break
+            self.map[x0,y0] += self.l_free - self.l_0
+            e2 = 2*err
+            if e2 >= dy:
+                err += dy 
+                x0 += sx
+            if e2 <= dx:
+                err += dx
+                y0 += sy

@@ -20,7 +20,7 @@ if __name__ == '__main__':
     for i in range(X.shape[1]):
         mes = z[:,:,i]
         sta = X[:,i:i+1] - np.array([[1],[1],[0]])
-        ogm.update_map(sta,mes[0:1,:])
+        ogm.update_map2(sta,mes[0:1,:])
 
         if plot_movement and i%25 == 0:
             plt.figure(0)
@@ -36,11 +36,11 @@ if __name__ == '__main__':
                 if not np.isnan(r):
                     plt.scatter(x + r*np.cos(t+b), y + r*np.sin(t+b), color='g')
             plt.figure(1)
-            plt.imshow(1 - np.flip(ogm.get_map().T,0), cmap='gray')
+            plt.imshow(1 - np.flipud(ogm.get_map().T), cmap='gray')
             plt.pause(0.00001)
 
     plt.ioff()
 
     plt.figure(1)
-    plt.imshow(1 - np.flip(ogm.get_map().T,0), cmap='gray')
+    plt.imshow(1 - np.flipud(ogm.get_map().T), cmap='gray')
     plt.show()
